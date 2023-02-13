@@ -100,6 +100,7 @@ public:
             return;
 
         wchar_t szUnicode[ 4096 ];
+        memset(szUnicode, 0, sizeof(wchar_t) * 4096);
         int nChars = V_UTF8ToUnicode( pszText, szUnicode, sizeof( szUnicode ) );
         if ( nChars > 1 )
             SetText( szUnicode, nChars - 1 );

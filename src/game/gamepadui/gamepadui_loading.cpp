@@ -4,6 +4,7 @@
 #include "vgui/IVGui.h"
 #include "vgui_controls/Frame.h"
 #include "vgui_controls/ProgressBar.h"
+#include "vgui/ISystem.h"
 
 using namespace vgui;
 
@@ -29,6 +30,7 @@ GamepadUILoading::GamepadUILoading(VPANEL parent) : vgui::Panel(NULL, "LoadingDi
 	m_pLogoImage = new vgui::ImagePanel(this, "SteamDeckLogo");
 
 	m_SpinnerFrame = 0;
+	m_prevFrameTime = 0.0;
 
 	InvalidateLayout(false, true);
 }
@@ -105,6 +107,12 @@ void GamepadUILoading::OnActivate()
 		Q_strcat(szImage, "_widescreen", sizeof(szImage));
 
 	m_pBGImage->SetImage(szImage);
+
+	m_prevFrameTime = vgui::system()->GetFrameTime();
+}
+
+void GamepadUILoading::OnDeactivate()
+{
 }
 
 void GamepadUILoading::SolveEnginePanel()
@@ -138,6 +146,8 @@ void GamepadUILoading::SolveEnginePanel()
 	}
 }
 
+const double spinner_framerate = (1.0 / 60.0);
+
 void GamepadUILoading::Paint()
 {
 	SolveEnginePanel();
@@ -148,9 +158,21 @@ void GamepadUILoading::Paint()
 	}
 
 	m_pSpinnerImage->SetFrame(m_SpinnerFrame);
-	m_SpinnerFrame++; // TODO - Actually run this at 60fps
-	if (m_SpinnerFrame >= m_pSpinnerImage->GetNumFrames())
+
+	double curFrameTime = vgui::system()->GetFrameTime();
+	double diff = curFrameTime - m_prevFrameTime;
+	if (diff > spinner_framerate)
 	{
-		m_SpinnerFrame = 0;
+		// increment frame by time passed
+		while (diff > spinner_framerate)
+		{
+			m_SpinnerFrame++;
+			diff -= spinner_framerate;
+		}
+		while (m_SpinnerFrame >= m_pSpinnerImage->GetNumFrames())
+		{
+			m_SpinnerFrame -= m_pSpinnerImage->GetNumFrames();
+		}
+		m_prevFrameTime = curFrameTime;
 	}
 }
